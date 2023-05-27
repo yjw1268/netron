@@ -184,7 +184,6 @@ host.BrowserHost = class {
         const hash = this.window.location.hash ? this.window.location.hash.replace(/^#/, '') : '';
         const search = this.window.location.search;
         const params = new URLSearchParams(search + (hash ? '&' + hash : ''));
-
         if (this._meta.file && this._meta.identifier) {
             const url = this._meta.file[0];
             if (this._view.accept(url)) {
@@ -201,7 +200,7 @@ host.BrowserHost = class {
                 .replace(new RegExp('^https://github.com/([\\w]*/[\\w]*)/blob/([\\w/_.]*)(\\?raw=true)?$'), 'https://raw.githubusercontent.com/$1/$2')
                 .replace(new RegExp('^https://huggingface.co/(.*)/blob/(.*)$'), 'https://huggingface.co/$1/resolve/$2');
             if (this._view.accept(identifier || location)) {
-                const title = await this._openModel(location, identifier);
+                const title = await this._openModel(this._downloadurl(location), identifier);
                 if (title) {
                     this.document.title = title;
                 }
@@ -405,6 +404,7 @@ host.BrowserHost = class {
     }
 
     _request(url, headers, encoding, callback, timeout) {
+        console.log(url);
         return new Promise((resolve, reject) => {
             const request = new XMLHttpRequest();
             if (!encoding) {
@@ -477,8 +477,16 @@ host.BrowserHost = class {
         return location.protocol + '//' + location.host + pathname + file;
     }
 
+    _downloadurl(file) {
+        const baseurl = '10.112.224.75:1018/api/netron/download?url=';
+        file = file.startsWith('./') ? file.substring(2) : file.startsWith('/') ? file.substring(1) : file;
+        const location = this.window.location;
+        return location.protocol + '//' + baseurl + file;
+    }
+
     async _openModel(url, identifier) {
-        url = url.startsWith('data:') ? url : url + ((/\?/).test(url) ? '&' : '?') + 'cb=' + (new Date()).getTime();
+        // url = url.startsWith('data:') ? url : url + ((/\?/).test(url) ? '&' : '?') + 'cb=' + (new Date()).getTime();
+        console.log(url);
         this._view.show('welcome spinner');
         try {
             const progress = (value) => {
