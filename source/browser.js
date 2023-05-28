@@ -65,7 +65,7 @@ host.BrowserHost = class {
                 const link = this._element('logo-github').href;
                 this.openURL(link);
             });
-            return new Promise(() => {});
+            return new Promise(() => { });
         }
         return Promise.resolve();
     }
@@ -174,7 +174,7 @@ host.BrowserHost = class {
         });
         if (required.length > available.length) {
             this.window.terminate('Your browser is not supported.');
-            return new Promise(() => {});
+            return new Promise(() => { });
         }
         return Promise.resolve();
     }
@@ -200,7 +200,7 @@ host.BrowserHost = class {
                 .replace(new RegExp('^https://github.com/([\\w]*/[\\w]*)/blob/([\\w/_.]*)(\\?raw=true)?$'), 'https://raw.githubusercontent.com/$1/$2')
                 .replace(new RegExp('^https://huggingface.co/(.*)/blob/(.*)$'), 'https://huggingface.co/$1/resolve/$2');
             if (this._view.accept(identifier || location)) {
-                const title = await this._openModel(this._downloadurl(location), identifier);
+                const title = await this._openModel(location, identifier);
                 if (title) {
                     this.document.title = title;
                 }
@@ -479,14 +479,18 @@ host.BrowserHost = class {
 
     _downloadurl(file) {
         const baseurl = '10.112.224.75:1018/api/netron/download?url=';
-        file = file.startsWith('./') ? file.substring(2) : file.startsWith('/') ? file.substring(1) : file;
+        file = file.startsWith('./') ? file.substring(1) : file;
         const location = this.window.location;
         return location.protocol + '//' + baseurl + file;
     }
 
     async _openModel(url, identifier) {
-        // url = url.startsWith('data:') ? url : url + ((/\?/).test(url) ? '&' : '?') + 'cb=' + (new Date()).getTime();
-        console.log(url);
+        if (url.startsWith('/')) {
+            url = this._downloadurl(url);
+            identifier = url.split('/').pop();
+        } else {
+            url = url.startsWith('data:') ? url : url + ((/\?/).test(url) ? '&' : '?') + 'cb=' + (new Date()).getTime();
+        }
         this._view.show('welcome spinner');
         try {
             const progress = (value) => {
@@ -732,14 +736,14 @@ host.BrowserHost.Context = class {
 
 if (!('scrollBehavior' in window.document.documentElement.style)) {
     const __scrollTo__ = Element.prototype.scrollTo;
-    Element.prototype.scrollTo = function(options) {
+    Element.prototype.scrollTo = function (options) {
         if (options !== undefined) {
             if (options === null || typeof options !== 'object' || options.behavior === undefined || arguments[0].behavior === 'auto' || options.behavior === 'instant') {
                 if (__scrollTo__) {
                     __scrollTo__.apply(this, arguments);
                 }
             } else {
-                const now = () =>  window.performance && window.performance.now ? window.performance.now() : Date.now();
+                const now = () => window.performance && window.performance.now ? window.performance.now() : Date.now();
                 const ease = (k) => 0.5 * (1 - Math.cos(Math.PI * k));
                 const step = (context) => {
                     const value = ease(Math.min((now() - context.startTime) / 468, 1));
